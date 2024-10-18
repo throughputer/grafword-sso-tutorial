@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Grafword</title>
+</head>
+
+<body>
+    <button id="grafwordLogin">Login with Grafword</button>
+
+    <script>
+        document.getElementById('grafwordLogin').addEventListener('click', function () {
+            var grafwordDomain = "dev-266224.okta.com";
+            var client_id = "grafword_client_id";
+            var redirect_uri = 'http://localhost:3000/profile';
+            var state = Math.random().toString(36).substring(2);
+            console.log("state", state)
+            var authUrl = `https://${grafwordDomain}/oauth2/v1/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=id_token%20token&scope=openid%20profile%20email&prompt=none&nonce=n-0S6_WzA2Mj&state=${state}`;
+            window.location.href = authUrl;
+        })
+    </script>
+</body>
+
+</html>
