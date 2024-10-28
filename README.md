@@ -8,8 +8,9 @@
 The authentication URL in the authUrl variable (Step 1) uses implicit flow, a method of OAuth 2.0 where tokens (like ID tokens and access tokens) are returned directly in the URL as part of the redirect back to your app.
 
 ## Prerequisites
-- An existing web application (e.g., "https://yourApp.com") using nodejs.
-- Grafword credentials: You will need to provide your `redirect_uri` (the URL where the user will be taken to after authenticating) and request a `client_id` from the Grafword team at info@throughputer.com.
+- An existing web application (e.g., `https://yourApp.com`) using nodejs.
+- Grafword credentials: You will need to request a `client_id` by sending an <a href="mailto:info@throughputer.com?subject=Client%20ID%20Request&body=I%20wish%20to%20request%20a%20client_id%20as%20per%20https://github.com/throughputer/grafword-sso-for-existing-apps.%0A%0AThe%20associated%20redirect%20URI%20should%20be%3A%20https%3A%2F%2F%3Cmy-domain%3E%2F%3Credirect-path%3E
+" target="_blank" rel=noopener noreferrer>email to the Grafword team</a>, providing an associated `redirect_uri` (the URL where the user will be taken to after authenticating).
 
 ## Step 1: Set Up the Login Button
 Add a button to your existing login page (e.g., index.html) for users to login with grafword. Replace `client_id` with the one you receive from Grafword team and your `redirect_uri`.
