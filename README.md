@@ -1,14 +1,16 @@
 # Add Grafword as a Single Sign On to Your Web Application
 
-### This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing web application via implicit flow. 
+## Overview
 
-#### By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
+This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing web application via implicit flow. 
 
-### What is the Implicit Flow?
-The authentication URL in the authUrl variable (Step 1) uses implicit flow, a method of OAuth 2.0 where tokens (like ID tokens and access tokens) are returned directly in the URL as part of the redirect back to your app.
+By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
+
+Grafword login utilizes "implicit flow", a method of OAuth 2.0. A request URL (authUrl variable in Step 1) makes the login request, and tokens (like ID tokens
+and access tokens) are returned as URL parameters in a redirect response.
 
 ## Prerequisites
-- An existing web application (e.g., `https://yourApp.com`) using nodejs.
+- An existing web application (e.g., `https://yourApp.com`) using Node.js.
 - Grafword credentials: You will need to request a `client_id` by sending an <a href="mailto:info@throughputer.com?subject=Client%20ID%20Request&body=I%20wish%20to%20request%20a%20client_id%20as%20per%20https://github.com/throughputer/grafword-sso-for-existing-apps.%0A%0AThe%20associated%20redirect%20URI%20should%20be%3A%20https%3A%2F%2F%3Cmy-domain%3E%2F%3Credirect-path%3E
 " target="_blank" rel=noopener noreferrer>email to the Grafword team</a>, providing an associated `redirect_uri` (the URL where the user will be taken to after authenticating).
 
