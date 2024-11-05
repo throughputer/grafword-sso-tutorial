@@ -6,16 +6,20 @@ This tutorial will walk you through installing Grafword as a Single Sign-On (SSO
 
 By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
 
-Grafword login utilizes "implicit flow", a method of OAuth 2.0. A request URL (authUrl variable in Step 1) makes the login request, and tokens (like ID tokens
-and access tokens) are returned as URL parameters in a redirect response.
+Grafword login utilizes "implicit flow", a method of OAuth 2.0. For successful application login, the user must already be logged into their Grafword account within
+their browser window, session, or profile (depending on your browser).
+A request URL (authUrl variable in Step 1) makes the login request, and an access token and user information are returned as URL parameters in a redirect response
+if successful.
 
 ## Prerequisites
 - An existing web application (e.g., `https://yourApp.com`) using Node.js.
+- Determine a "redirect URI". This is the URL the browser will be redirected to after authentication.
+  For example, you may wish the user to land on `https://yourApp.com/profile.html` after authentication.
 - Grafword credentials: You will need to request a `client_id` by sending an <a href="mailto:info@throughputer.com?subject=Client%20ID%20Request&body=I%20wish%20to%20request%20a%20client_id%20as%20per%20https://github.com/throughputer/grafword-sso-for-existing-apps.%0A%0AThe%20associated%20redirect%20URI%20should%20be%3A%20https%3A%2F%2F%3Cmy-domain%3E%2F%3Credirect-path%3E
-" target="_blank" rel=noopener noreferrer>email to the Grafword team</a>, providing an associated `redirect_uri` (the URL where the user will be taken to after authenticating).
+" target="_blank" rel=noopener noreferrer>email to the Grafword team</a>, providing in this email your desired Redirect URI.
 
 ## Step 1: Set Up the Login Button
-Add a button to your existing login page (e.g., index.html) for users to login with grafword. Replace `client_id` with the one you receive from Grafword team and your `redirect_uri`.
+Add a button to your existing login page (e.g., index.html) for users to login with Grafword. Replace `client_id` with the one you receive from Grafword team, and fill in your chosen `redirect_uri`.
 
 ```bash
 <button id="grafwordLogin">Login with Grafword</button>
@@ -31,11 +35,14 @@ Add a button to your existing login page (e.g., index.html) for users to login w
     });
 </script>
 ```
-This button will redirect the user to Grafword for authentication.
+This button will direct the browser window to Grafword for authentication and respond with a redirection to the redirect URI. A login ID token will be provided if the user's browser session was 
 
 ## Step 2: Handle Profile Page for Grafword Authentication
-Once the user is redirected back to your application (e.g., profile.html) after authentication, you will need to handle the response. Create a `profile.html` page (or modify the existing one) to display the user's profile information.
-Replace `client_id` with the one you receive from Grafword team and your `redirect_uri`.
+Upon redirection, your application must handle the response. You could use the below `profile.html` page, replacing the `client_id` and `redirect_uri`, or similarly modify an existing page. Notably, this page does the following to handle the authentication:
+
+  - on document load, extracts the fields of the response (from URL parameters)
+  - if successful, extracts and displays the user information (name and email), and provides a logout button
+  - if unsuccessful, provides instructions for Grafword session login
 
 ```bash
 <!DOCTYPE html>
@@ -89,10 +96,8 @@ Replace `client_id` with the one you receive from Grafword team and your `redire
 
 ```
 
-This page will extract the ID token from the URL, decode it to retrieve user information, and display the user's name and email on the profile page.
-
 ## Step 3: Server-Side Code for Hosting the Application
-Modify your existing or create a `server.js` file to serve your web application and handle the routing. Full server.js:
+Modify your existing or create a `server.js` file to serve your web application and handle the routing. Full `server.js`:
 ```bash
 const express = require('express');
 const path = require('path');
