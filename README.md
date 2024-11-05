@@ -35,14 +35,14 @@ Add a button to your existing login page (e.g., index.html) for users to login w
     });
 </script>
 ```
-This button will direct the browser window to Grafword for authentication and respond with a redirection to the redirect URI. A login ID token will be provided if the user's browser session was 
+This button will direct the browser window to Grafword for authentication and respond with a redirection to the redirect URI. A login ID token will be provided if the user's browser session was logged into Grafword.
 
 ## Step 2: Handle Profile Page for Grafword Authentication
 Upon redirection, your application must handle the response. You could use the below `profile.html` page, replacing the `client_id` and `redirect_uri`, or similarly modify an existing page. Notably, this page does the following to handle the authentication:
 
   - on document load, extracts the fields of the response (from URL parameters)
   - if successful, extracts and displays the user information (name and email), and provides a logout button
-  - if unsuccessful, provides instructions for Grafword session login
+  - if unsuccessful, provides instructions for Grafword browser session login
 
 ```bash
 <!DOCTYPE html>
