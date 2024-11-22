@@ -1,110 +1,141 @@
 # Add Grafword as a Single Sign On to Your Web Application
 
-## Overview
+### This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing web application or cloning the repo and using this as a starting app via implicit flow. 
 
-This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing web application via implicit flow. 
+#### By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
 
-By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
-
-Grafword login utilizes "implicit flow", a method of OAuth 2.0. For successful application login, the user must already be logged into their Grafword account within
-their browser window, session, or profile (depending on your browser).
-A request URL (authUrl variable in Step 1) makes the login request, and an access token and user information are returned as URL parameters in a redirect response
-if successful.
+Grafword login utilizes "implicit flow", a method of OAuth 2.0. For a successful application login, the id_token will be returned in the protected route(s).
 
 ## Prerequisites
-- An existing web application (e.g., `https://yourApp.com`) using Node.js.
-- Determine a "redirect URI". This is the URL the browser will be redirected to after authentication.
-  For example, you may wish the user to land on `https://yourApp.com/profile.html` after authentication.
-- Grafword credentials: You will need to request a `client_id` by sending an <a href="mailto:info@throughputer.com?subject=Client%20ID%20Request&body=I%20wish%20to%20request%20a%20client_id%20as%20per%20https://github.com/throughputer/grafword-sso-for-existing-apps.%0A%0AThe%20associated%20redirect%20URI%20should%20be%3A%20https%3A%2F%2F%3Cmy-domain%3E%2F%3Credirect-path%3E
-" target="_blank" rel=noopener noreferrer>email to the Grafword team</a>, providing in this email your desired Redirect URI.
+- Either an existing web application (e.g., "https://yourApp.com") using nodejs or clone this repo and host the starter app at "http://localhost:3000".
 
 ## Step 1: Set Up the Login Button
-Add a button to your existing login page (e.g., index.html) for users to login with Grafword. Replace `client_id` with the one you receive from Grafword team, and fill in your chosen `redirect_uri`.
+Add a button to your existing login page (e.g., index.html) for users to login with grafword.
 
 ```bash
+// Button to start grafword login process
 <button id="grafwordLogin">Login with Grafword</button>
 
 <script>
-    document.getElementById('grafwordLogin').addEventListener('click', function () {
-        var grafwordDomain = "dev-266224.okta.com";
-        var redirect_uri = "https://yourApp.com/profile";
-        var client_id = "grafword_client_id";
-        var state = Math.random().toString(36).substring(2);
-        var authUrl = `https://${grafwordDomain}/oauth2/v1/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=id_token%20token&scope=openid%20profile%20email&nonce=your_nonce&state=${state}`;
-        window.location.href = authUrl;
-    });
+let grafword = "https://login.grafword.com";
+// Protected_endpoint to redirect the user
+let protected_endpoint = `${window.location.origin}/profile`; 
+
+document.getElementById("grafwordLogin").addEventListener("click", function () {
+    let parentUrl = window.location.href;
+    // URL to open in the popup of grafword
+    const loginUrl = `${grafword}?parentUrl=${encodeURIComponent(parentUrl)}`;
+
+    // Open the popup
+    const popup = window.open(
+        loginUrl,
+        "GrafwordSSO",
+        "width=600,height=905"
+    );
+});
+
+// Listen for the id token from the popup
+window.addEventListener("message", (event) => {
+    // Validate the origin of the message. It has to come from grafword
+    if (event.origin !== grafword) {
+        console.error("Invalid origin:", event.origin);
+        return;
+    }
+    // Extract the infor from grafword
+    const { id_token } = event.data;
+
+    if (id_token) {
+        // Redirect to protected route with the id_token as a query parameter
+        window.location.href = `${protected_endpoint}?q=${encodeURIComponent(id_token)}`;
+    }
+    else {
+        console.log("No id token found")
+    }
+});
 </script>
 ```
-This button will direct the browser window to Grafword for authentication and respond with a redirection to the redirect URI. A login ID token will be provided if the user's browser session was logged into Grafword.
-
 ## Step 2: Handle Profile Page for Grafword Authentication
-Upon redirection, your application must handle the response. You could use the below `profile.html` page, replacing the `client_id` and `redirect_uri`, or similarly modify an existing page. Notably, this page does the following to handle the authentication:
+Upon redirection, your application must handle the response. You could use the below profile.html page, or similarly modify an existing page. Notably, this page does the following to display the user's profile information:
 
-  - on document load, extracts the fields of the response (from URL parameters)
-  - if successful, extracts and displays the user information (name and email), and provides a logout button
-  - if unsuccessful, provides instructions for Grafword browser session login
+- On document load, extracts the id_token of the response (from URL parameters)
 
 ```bash
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Profile Page</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
-    <div id="profileContent" style="display: none;" class="profile-info"></div>
-    <button id="logoutButton" style="display: none;">Logout</button>
-    <div id="noToken" class="profile-info" style="display: none;"></div>
+    <div id="profileContent"></div>
+    <button id="logoutButton-profile">Logout</button>
 
     <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            var hash = window.location.hash.substr(1);
-            var params = new URLSearchParams(hash);
-            var id_token = params.get('id_token');
+        const grafword = "https://login.grafword.com";
 
-            if (id_token) {
-                // If there is an ID token, show the profile content and logout button
-                document.getElementById('profileContent').style.display = 'block';
-                var payload = id_token.split('.')[1];
-                var decoded = atob(payload);
-                var user_info = JSON.parse(decoded);
-
-                document.getElementById('profileContent').innerHTML = `<p>Name: ${user_info.name}</p><p>Email: ${user_info.email}</p>`;
-
-                document.getElementById('logoutButton').style.display = 'inline-block';
-                document.getElementById('logoutButton').addEventListener('click', function () {
-                    window.location.href = '/';
+        // Function to send user's ID token to grafword.
+        async function sendIdToken(idToken) {
+            try {
+                //This is the endpoint to recieve id_token
+                let response = await fetch(`${grafword}/userRequests`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ idToken: idToken }),
                 });
 
-            } else {
-                // If no token, hide profile content and logout button, show noToken message
-                document.getElementById('profileContent').style.display = 'none';  // Hide profile content
-                document.getElementById('logoutButton').style.display = 'none';    // Hide logout button
-                document.getElementById('noToken').style.display = 'block';        // Show the noToken message
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}, Message: ${errorMessage}`);
+                }
+                let data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', async function () {
+            const url = new URL(window.location.href);
+            // Get idToken to query param
+            const id_token = url.searchParams.get('q');
+            if (id_token) {
+                // Send user's id token to grafword for parsing and returning user information
+                let user = await sendIdToken(id_token);
+                let firstname = user.firstname;
+                let lastname = user.lastname;
+                let email = user.email;
 
-                var grafwordDomain = "dev-266224.okta.com";
-                var redirect_uri = "http://yourApp.com/profile";
-                var client_id = "grafword_client_id";
-                var state = Math.random().toString(36).substring(2)
-                document.getElementById('noToken').innerHTML += `Please first login at <a href="https://login.grafword.com" target="_blank"> grafword</a>. Then
-                <a href="https://${grafwordDomain}/oauth2/v1/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=id_token%20token&scope=openid%20profile%20email&prompt=none&nonce=n-0S6_WzA2Mj&state=${state}">continue to your profile page</a>.`;
+                document.getElementById('profileContent').innerHTML = `<p>Name: ${firstname} ${lastname}</p><p>Email: ${email}</p>`;
+                document.getElementById('logoutButton-profile').addEventListener('click', function () {
+                    window.location.href = '/';
+                });
+            }
+            else {
+                document.getElementById('profileContent').innerHTML = `<p>Invalid session. Try login again</p>`;
             }
         });
     </script>
 </body>
+
 </html>
 
 ```
 
+This page will extract the ID token from the query param, send it to grafword, and display the user's name and email on the protected profile page.
+
 ## Step 3: Server-Side Code for Hosting the Application
-Modify your existing or create a `server.js` file to serve your web application and handle the routing. Full `server.js`:
+Modify your existing or create a `server.js` file to serve your web application and handle the routing. Full server.js:
 ```bash
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-
 const app = express();
 const port = 3000;
+
+app.use(express.json()); // Parse JSON bodies
 
 // Middleware to serve static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -126,6 +157,14 @@ app.get('/profile', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
+
+```
+
+After cloning, run the following commands:
+
+```bash
+npm install
+npm start
 ```
 
 ## Conclusion

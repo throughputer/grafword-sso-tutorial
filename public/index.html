@@ -5,21 +5,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login with Grafword</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
     <button id="grafwordLogin">Login with Grafword</button>
 
     <script>
-        document.getElementById('grafwordLogin').addEventListener('click', function () {
-            var grafwordDomain = "dev-266224.okta.com";
-            var client_id = "grafword_client_id";
-            var redirect_uri = 'http://localhost:3000/profile';
-            var state = Math.random().toString(36).substring(2);
-            console.log("state", state)
-            var authUrl = `https://${grafwordDomain}/oauth2/v1/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=id_token%20token&scope=openid%20profile%20email&prompt=none&nonce=n-0S6_WzA2Mj&state=${state}`;
-            window.location.href = authUrl;
-        })
+        let grafword = "https://login.grafword.com";
+        let protected_endpoint = `${window.location.origin}/profile`;
+
+        document.getElementById("grafwordLogin").addEventListener("click", function () {
+            let parentUrl = window.location.href;
+            // URL to open in the popup of grafword
+            const loginUrl = `${grafword}?parentUrl=${encodeURIComponent(parentUrl)}`;
+
+            // Open the popup
+            const popup = window.open(
+                loginUrl,
+                "GrafwordSSO",
+                "width=600,height=905"
+            );
+        });
+
+        // Listen for the id token from the popup
+        window.addEventListener("message", (event) => {
+            // Validate the origin of the message. It has to come from grafword
+            if (event.origin !== grafword) {
+                console.error("Invalid origin:", event.origin);
+                return;
+            }
+            // Extract the infor from grafword
+            const { id_token } = event.data;
+
+            if (id_token) {
+                // Redirect to protected route with the id_token as a query parameter
+                window.location.href = `${protected_endpoint}?q=${encodeURIComponent(id_token)}`;
+            }
+            else {
+                console.log("No id token found")
+            }
+        });
     </script>
 </body>
 

@@ -4,47 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <title>Profile Page</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
-    <div id="profileContent" style="display: none;" class="profile-info"></div>
-    <button id="logoutButton" style="display: none;">Logout</button>
-    <div id="noToken" class="profile-info" style="display: none;"></div>
+    <div id="profileContent"></div>
+    <button id="logoutButton-profile">Logout</button>
 
     <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            var hash = window.location.hash.substr(1);
-            var params = new URLSearchParams(hash);
-            var id_token = params.get('id_token');
+        const grafword = "https://login.grafword.com";
 
-            if (id_token) {
-                // If there is an ID token, show the profile content and logout button
-                document.getElementById('profileContent').style.display = 'block';
-                var payload = id_token.split('.')[1];
-                var decoded = atob(payload);
-                var user_info = JSON.parse(decoded);
-
-                document.getElementById('profileContent').innerHTML = `<p>Name: ${user_info.name}</p><p>Email: ${user_info.email}</p>`;
-
-                document.getElementById('logoutButton').style.display = 'inline-block';
-                document.getElementById('logoutButton').addEventListener('click', function () {
-                    window.location.href = '/';
+        // Function to send user's ID token to grafword.
+        async function sendIdToken(idToken) {
+            try {
+                //This is the endpoint to recieve id_token
+                let response = await fetch(`${grafword}/userRequests`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ idToken: idToken }),
                 });
 
-            } else {
-                // If no token, hide profile content and logout button, prompt user to login with grafword first
-                document.getElementById('profileContent').style.display = 'none'; // Hide profile content
-                document.getElementById('logoutButton').style.display = 'none';   // Hide logout button
-                document.getElementById('noToken').style.display = 'block';      // Show the noToken message
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}, Message: ${errorMessage}`);
+                }
+                let data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', async function () {
+            const url = new URL(window.location.href);
+            // Get idToken to query param
+            const id_token = url.searchParams.get('q');
+            if (id_token) {
+                // Send user's id token to grafword for parsing and returning user information
+                let user = await sendIdToken(id_token);
+                let firstname = user.firstname;
+                let lastname = user.lastname;
+                let email = user.email;
 
-                var grafwordDomain = "dev-266224.okta.com";
-                var redirect_uri = "http://localhost:3000/profile";
-                var client_id = "grafword_client_id";
-                var state = Math.random().toString(36).substring(2);
-                document.getElementById('noToken').innerHTML += `Please first login at <a href="https://login.grafword.com" target="_blank"> grafword</a>. Then
-                <a
-                    href="https://${grafwordDomain}/oauth2/v1/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=id_token%20token&scope=openid%20profile%20email&prompt=none&nonce=n-0S6_WzA2Mj&state=${state}">continue
-                    to your profile page</a> .`;
+                document.getElementById('profileContent').innerHTML = `<p>Name: ${firstname} ${lastname}</p><p>Email: ${email}</p>`;
+                document.getElementById('logoutButton-profile').addEventListener('click', function () {
+                    window.location.href = '/';
+                });
+            }
+            else {
+                document.getElementById('profileContent').innerHTML = `<p>Invalid session. Try login again</p>`;
             }
         });
     </script>
