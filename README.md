@@ -1,18 +1,43 @@
 # Add Grafword as a Single Sign On to Your Web Application
 
-### This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing web application or cloning the repo and using this as a starting app via implicit flow. 
+### This tutorial will walk you through installing Grafword as a Single Sign-On (SSO) into your existing Node.js web application or using this repo as a starting point for your app. 
 
 #### By the end of this guide, your application will allow users to sign in with Grafword in addition to any existing SSO solutions like Google, Facebook, or others.
 
 Grafword login utilizes "implicit flow", a method of OAuth 2.0. For a successful application login, the id_token will be returned in the protected route(s).
 
 ## Prerequisites
-- Either an existing web application (e.g., "https://yourApp.com") using nodejs or clone this repo and host the starter app at "http://localhost:3000".
+
+These instructions require a Linux-based system with `npm` installed.
+
+### Starting from This Repo
+
+To use this repository:
+
+- Create a copy of this repository on GitHub:
+  - Log in to GitHub.
+  - From this repository page, click the green "Use this template" button.
+- Clone your repo, and `cd` into it.
+- Run:
+```bash
+npm install
+npm start
+```
+- View the application at `http://localhost:3000`.
+- Build your app based on this code.
+
+### Using Grafword on your Existing App
+
+Or, if you have an existing Node.js web application (e.g., `https://yourApp.com`), follow the steps below.
+
 
 ## Step 1: Set Up the Login Button
+
 Add a button to your existing login page (e.g., index.html) for users to login with grafword.
 
-```bash
+**`index.html`**
+
+```html
 // Button to start grafword login process
 <button id="grafwordLogin">Login with Grafword</button>
 
@@ -41,7 +66,7 @@ window.addEventListener("message", (event) => {
         console.error("Invalid origin:", event.origin);
         return;
     }
-    // Extract the infor from grafword
+    // Extract the info from grafword
     const { id_token } = event.data;
 
     if (id_token) {
@@ -54,12 +79,14 @@ window.addEventListener("message", (event) => {
 });
 </script>
 ```
+
 ## Step 2: Handle Profile Page for Grafword Authentication
-Upon redirection, your application must handle the response. You could use the below profile.html page, or similarly modify an existing page. Notably, this page does the following to display the user's profile information:
 
-- On document load, extracts the id_token of the response (from URL parameters)
+Upon successful login, the browser is redirected. The code in Step 1 redirects to `/profile`, which you may change as you see fit. The `profile.html` file below extracts the `id_token` from the redirection response (from URL parameters), shares it with the grafword server, and displays the user's name and email on the protected profile page. You can incorporate similar code into your application.
 
-```bash
+**`profile.html`**
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -79,7 +106,7 @@ Upon redirection, your application must handle the response. You could use the b
         // Function to send user's ID token to grafword.
         async function sendIdToken(idToken) {
             try {
-                //This is the endpoint to recieve id_token
+                //This is the endpoint to receive id_token
                 let response = await fetch(`${grafword}/userRequests`, {
                     method: 'POST',
                     headers: {
@@ -124,11 +151,13 @@ Upon redirection, your application must handle the response. You could use the b
 
 ```
 
-This page will extract the ID token from the query param, send it to grafword, and display the user's name and email on the protected profile page.
-
 ## Step 3: Server-Side Code for Hosting the Application
-Modify your existing or create a `server.js` file to serve your web application and handle the routing. Full server.js:
-```bash
+
+Modify your existing or create a `server.js` file to serve your web application and handle the routing.
+
+**`server.js`**
+
+```javascript
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -160,14 +189,9 @@ app.listen(port, () => {
 
 ```
 
-After cloning, run the following commands:
-
-```bash
-npm install
-npm start
-```
 
 ## Conclusion
+
 By following this tutorial, you have successfully installed Grafword as a Single Sign-On (SSO) provider into your existing web application using OAuth 2.0’s implicit flow. Users can now securely log in to your application using Grafword in addition to other SSO methods, such as Google or Facebook.
 
 This setup not only enhances the security and usability of your application but also simplifies user account management by centralizing authentication with Grafword.
