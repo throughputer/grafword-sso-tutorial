@@ -17,7 +17,7 @@
         // Function to send user's ID token to grafword.
         async function sendIdToken(idToken) {
             try {
-                //This is the endpoint to recieve id_token
+                //This is the endpoint to receive id_token
                 let response = await fetch(`${grafword}/userRequests`, {
                     method: 'POST',
                     headers: {
