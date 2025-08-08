@@ -6,7 +6,7 @@
 
 Grafword login utilizes "implicit flow", a method of OAuth 2.0. For a successful application login, the id_token will be returned in the protected route(s).
 
-[Demo](https://blue.estimatorlab.com/) - Check out our live demo to see the app in action!
+[Demo](https://blue.passgraf.com/) - Check out our live demo to see the app in action!
 
 ## Prerequisites
 
