@@ -2,3 +2,5 @@
 package-lock.json
 READMEcopy.md
 .DS_Store
+.env
+/certs

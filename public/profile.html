@@ -12,48 +12,22 @@
     <button id="logoutButton-profile">Logout</button>
 
     <script>
-        const grafword = "https://login.grafword.com";
-
-        // Function to send user's ID token to grafword.
-        async function sendIdToken(idToken) {
-            try {
-                //This is the endpoint to receive id_token
-                let response = await fetch(`${grafword}/userRequests`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ idToken: idToken }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok. Status: ${response.status}, Message: ${errorMessage}`);
-                }
-                let data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error:', error);
+        async function loadProfile() {
+            const response = await fetch('/api/profile');
+            if (!response.ok) {
+                document.getElementById('profileContent').innerHTML = '<p>Invalid session. Try login again</p>';
+                return;
             }
+            const user = await response.json();
+            document.getElementById('profileContent').innerHTML =
+                `<p>Name: ${user.name}</p><p>Email: ${user.email}</p>`;
         }
-        window.addEventListener('DOMContentLoaded', async function () {
-            const url = new URL(window.location.href);
-            // Get idToken to query param
-            const id_token = url.searchParams.get('q');
-            if (id_token) {
-                // Send user's id token to grafword for parsing and returning user information
-                let user = await sendIdToken(id_token);
-                let firstname = user.firstname;
-                let lastname = user.lastname;
-                let email = user.email;
 
-                document.getElementById('profileContent').innerHTML = `<p>Name: ${firstname} ${lastname}</p><p>Email: ${email}</p>`;
-                document.getElementById('logoutButton-profile').addEventListener('click', function () {
-                    window.location.href = '/';
-                });
-            }
-            else {
-                document.getElementById('profileContent').innerHTML = `<p>Invalid session. Try login again</p>`;
-            }
+        window.addEventListener('DOMContentLoaded', function () {
+            loadProfile();
+            document.getElementById('logoutButton-profile').addEventListener('click', function () {
+                window.location.href = '/logout';
+            });
         });
     </script>
 </body>

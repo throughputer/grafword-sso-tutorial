@@ -9,43 +9,19 @@
 </head>
 
 <body>
-    <button id="grafwordLogin">Login with Grafword</button>
+    <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
+    <a id="grafwordLogin" href="/auth/grafword/login">Login with Grafword</a>
 
     <script>
-        let grafword = "https://login.grafword.com";
-        let protected_endpoint = `${window.location.origin}/profile`;
-
-        document.getElementById("grafwordLogin").addEventListener("click", function () {
-            let parentUrl = window.location.href;
-            // URL to open in the popup of grafword
-            const loginUrl = `${grafword}?parentUrl=${encodeURIComponent(parentUrl)}`;
-
-            // Open the popup
-            const popup = window.open(
-                loginUrl,
-                "GrafwordSSO",
-                "width=600,height=905"
-            );
-        });
-
-        // Listen for the id token from the popup
-        window.addEventListener("message", (event) => {
-            // Validate the origin of the message. It has to come from grafword
-            if (event.origin !== grafword) {
-                console.error("Invalid origin:", event.origin);
-                return;
-            }
-            // Extract the info from grafword
-            const { id_token } = event.data;
-
-            if (id_token) {
-                // Redirect to protected route with the id_token as a query parameter
-                window.location.href = `${protected_endpoint}?q=${encodeURIComponent(id_token)}`;
-            }
-            else {
-                console.log("No id token found")
-            }
-        });
+        // GET /profile (server.js) redirects here with ?sessionEnded=1 when
+        // it finds no session - either it expired naturally, or a
+        // back-channel logout ended it.
+        if (new URLSearchParams(window.location.search).has('sessionEnded')) {
+            document.getElementById('sessionEndedMessage').style.display = 'block';
+            // Clean the URL so refreshing/sharing the link doesn't keep
+            // showing the message.
+            history.replaceState(null, '', '/');
+        }
     </script>
 </body>
 
