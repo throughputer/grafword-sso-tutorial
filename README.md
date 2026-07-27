@@ -33,7 +33,7 @@ server requires HTTPS because:
 - Grafword requires an `https://` `redirect_uri`
 - session cookies are marked `secure`, so they only work over HTTPS
 
-- Copy `.env.example` to `.env` and fill it in (see "Getting a client_id"
+- Rename `.env.example` to `.env` and fill it in (see "Getting a client_id"
   below before you can fill in `GRAFWORD_CLIENT_ID`/`GRAFWORD_REDIRECT_URI`).
 
 The cert isn't committed to the repo - each clone generates its own. If you
@@ -51,10 +51,6 @@ npm start
 - Build your app based on this code.
 - By default the app talks to Grafword SSO (`https://login.grafword.com`).
 
-## Using Grafword on your Existing App
-
-Or, if you have an existing Node.js web application (e.g., `https://yourApp.com`), follow the steps below.
-
 ## Getting a client_id
 
 Every app that signs in with Grafword has to be registered with Grafword.
@@ -66,6 +62,10 @@ Every app that signs in with Grafword has to be registered with Grafword.
 3. Send those URLs to the Grafword team/administrator at info@throughputer.com. They'll register your app and reply to you with a `client_id`.
 4. Put that `client_id`, the Grafword server's URL, and your
    `redirect_uri` into your `.env` (see `.env.example`).
+
+## Using Grafword on your Existing App
+
+Or, if you have an existing Node.js web application (e.g., `https://yourApp.com`), follow the steps below.
 
 ### Step 1: Set Up the Login Button
 
@@ -389,6 +389,7 @@ https.createServer(httpsOptions, app).listen(port, () => {
 
 When a user signs out of Grafword (or their Grafword session expires),
 Grafword tells every app they were signed into to end their session too. This is optional, you can skip it and implement your own session expiry feature.
+***Backchannel login*** does not work on localhost.
 
 To implement, copy these into your server.js file:
 
