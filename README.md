@@ -78,7 +78,7 @@ in with Grafword with full-page redirect.
 <a id="grafwordLogin" href="/auth/grafword/login">Login with Grafword</a>
 ```
 
-**Optional**: if `GET /profile` redirects with `?sessionEnded=1` (see
+If `GET /profile` redirects with `?sessionEnded=1` (see
 Step 3), you can show the user why they're back on this page instead of
 silently landing them here with no explanation:
 
