@@ -124,7 +124,7 @@ pop-up blockers).
     document.getElementById('grafwordLoginPopup').addEventListener('click', () => {
         // Must be called synchronously inside the click handler, or browsers
         // will block it as an unrequested popup.
-        window.open('/auth/grafword/login', 'GrafwordSSO', 'width=700,height=900');
+        window.open('/auth/grafword/login', 'GrafwordSSO', 'width=770,height=900');
     });
 
     document.getElementById('logoutButton').addEventListener('click', () => {
