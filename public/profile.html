@@ -15,7 +15,7 @@
         async function loadProfile() {
             const response = await fetch('/api/profile');
             if (!response.ok) {
-                document.getElementById('profileContent').innerHTML = '<p>Invalid session. Try login again</p>';
+                window.location.href = '/?sessionEnded=1';
                 return;
             }
             const user = await response.json();

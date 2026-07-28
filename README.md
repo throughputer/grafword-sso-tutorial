@@ -93,7 +93,7 @@ That's the whole login trigger - clicking it hands off to your server's
 
 **Optional**: If page redirects are undesirable in your use model, this flow
 may be utilized in a pop-up (though user experience may be affected by
-pop-up blockers). Replace the code in `public/index.html` with the below.
+pop-up blockers). Replace the `<body> </body>` in `public/index.html` with the code below.
 
 ```html
 <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
@@ -177,8 +177,10 @@ signed in and displays it.
 See `public/profile.html` in this repo for the exact code.
 - On load, it calls `GET /api/profile` (the same endpoint Step 1's
   active-session check uses) and fills `#profileContent` with the
-  name/email from the response - or an "Invalid session" message if it
-  comes back `401`.
+  name/email from the response - or redirects to `/?sessionEnded=1` if it
+  comes back `401` (the session died between the server serving this page
+  and this fetch running - e.g. a back-channel logout landing at that
+  exact moment).
 
 ## Step 3: Server-Side Code for Hosting the Application
 
