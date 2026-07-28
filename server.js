@@ -216,9 +216,10 @@ app.get('/callback', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    if (req.session.grafwordUser) {
-        return res.redirect('/profile');
-    }
+    // index.html checks /api/profile itself and shows signed-in state in
+    // place, so this always serves it rather than redirecting to /profile
+    // when a session exists - otherwise that check would never get a
+    // chance to run.
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

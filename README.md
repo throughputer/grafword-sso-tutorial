@@ -101,7 +101,7 @@ This repo's own `public/index.html` already includes it.
 
 **Optional**: If page redirects are undesirable in your use model, this flow
 may be utilized in a pop-up (though user experience may be affected by
-pop-up blockers).
+pop-up blockers). Replace the above code with this.
 
 ```html
 <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
