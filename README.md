@@ -99,9 +99,9 @@ silently landing them here with no explanation:
 
 This repo's own `public/index.html` already includes it.
 
-**Optional**: if your app is stateful (a form in progress, an editor's
-in-memory contents, a game, etc.) and you don't want a full-page redirect to
-Grafword, you can sign the user in through a popup instead. The main tab never navigates anywhere — only the popup does the login round trip, then signals the main tab and closes itself.
+**Optional**: If page redirects are undesirable in your use model, this flow
+may be utilized in a pop-up (though user experience may be affected by
+pop-up blockers).
 
 ```html
 <button id="grafwordLoginPopup">Login with Grafword (keep my place)</button>
