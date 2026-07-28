@@ -93,7 +93,7 @@ That's the whole login trigger - clicking it hands off to your server's
 
 **Optional**: If page redirects are undesirable in your use model, this flow
 may be utilized in a pop-up (though user experience may be affected by
-pop-up blockers). Replace the `<body> </body>` in `public/index.html` with the code below.
+pop-up blockers). Replace inside the `<body> </body>` in `public/index.html` with the code below.
 
 ```html
 <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
