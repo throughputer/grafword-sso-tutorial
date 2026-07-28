@@ -105,46 +105,60 @@ pop-up blockers).
 
 ```html
 <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
-<button id="grafwordLoginPopup">Login with Grafword</button>
+    <button id="grafwordLoginPopup">Login with Grafword</button>
 
-<div id="userInfo" style="display:none;">
-    <p>Name: <span id="userName"></span></p>
-    <p>Email: <span id="userEmail"></span></p>
-    <button id="logoutButton">Logout</button>
-</div>
+    <div id="userInfo" style="display:none;">
+        <p>Name: <span id="userName"></span></p>
+        <p>Email: <span id="userEmail"></span></p>
+        <button id="logoutButton">Logout</button>
+    </div>
 
-<script>
-    // GET /profile (server.js) redirects here with ?sessionEnded=1 when
-    // it finds no session - either it expired naturally, or a
-    // back-channel logout ended it.
-    if (new URLSearchParams(window.location.search).has('sessionEnded')) {
-        document.getElementById('sessionEndedMessage').style.display = 'block';
-        history.replaceState(null, '', '/');
-    }
-    document.getElementById('grafwordLoginPopup').addEventListener('click', () => {
-        // Must be called synchronously inside the click handler, or browsers
-        // will block it as an unrequested popup.
-        window.open('/auth/grafword/login', 'GrafwordSSO', 'width=770,height=900');
-    });
+    <script>
+        // GET /profile (server.js) redirects here with ?sessionEnded=1 when
+        // it finds no session - either it expired naturally, or a
+        // back-channel logout ended it.
+        if (new URLSearchParams(window.location.search).has('sessionEnded')) {
+            document.getElementById('sessionEndedMessage').style.display = 'block';
+            // Clean the URL so refreshing/sharing the link doesn't keep
+            // showing the message.
+            history.replaceState(null, '', '/');
+        }
 
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        window.location.href = '/logout';
-    });
+        document.getElementById('grafwordLoginPopup').addEventListener('click', () => {
+            // Must be called synchronously inside the click handler, or browsers
+            // will block it as an unrequested popup.
+            window.open('/auth/grafword/login', 'GrafwordSSO', 'width=700,height=900');
+        });
 
-    window.addEventListener('message', async (event) => {
-        // Only trust messages from this same app - not just any window that
-        // happens to have opened one.
-        if (event.origin !== window.location.origin) return;
-        if (event.data && event.data.grafwordLoginComplete) {
-            const response = await fetch('/api/profile');
-            const user = await response.json();
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            window.location.href = '/logout';
+        });
 
+        function showSignedInUser(user) {
             document.getElementById('grafwordLoginPopup').style.display = 'none';
             document.getElementById('userName').textContent = user.name;
             document.getElementById('userEmail').textContent = user.email;
             document.getElementById('userInfo').style.display = 'block';
         }
-    });
+
+        window.addEventListener('message', async (event) => {
+            // Only trust messages from this same app - not just any window that
+            // happens to have opened one.
+            if (event.origin !== window.location.origin) return;
+            if (event.data && event.data.grafwordLoginComplete) {
+                const response = await fetch('/api/profile');
+                const user = await response.json();
+                showSignedInUser(user);
+            }
+        });
+
+        // Runs immediately to check if the user is already signed in when the page loads.
+        (async () => {
+            const response = await fetch('/api/profile');
+            if (response.ok) {
+                showSignedInUser(await response.json());
+            }
+        })();
 </script>
 ```
 

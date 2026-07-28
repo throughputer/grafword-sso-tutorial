@@ -39,6 +39,13 @@
             window.location.href = '/logout';
         });
 
+        function showSignedInUser(user) {
+            document.getElementById('grafwordLoginPopup').style.display = 'none';
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userInfo').style.display = 'block';
+        }
+
         window.addEventListener('message', async (event) => {
             // Only trust messages from this same app - not just any window that
             // happens to have opened one.
@@ -46,13 +53,17 @@
             if (event.data && event.data.grafwordLoginComplete) {
                 const response = await fetch('/api/profile');
                 const user = await response.json();
-
-                document.getElementById('grafwordLoginPopup').style.display = 'none';
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('userInfo').style.display = 'block';
+                showSignedInUser(user);
             }
         });
+
+        // Runs immediately to check if the user is already signed in when the page loads.
+        (async () => {
+            const response = await fetch('/api/profile');
+            if (response.ok) {
+                showSignedInUser(await response.json());
+            }
+        })();
     </script>
 </body>
 
