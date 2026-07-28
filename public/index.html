@@ -10,7 +10,13 @@
 
 <body>
     <p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
-    <a id="grafwordLogin" href="/auth/grafword/login">Login with Grafword</a>
+    <button id="grafwordLoginPopup">Login with Grafword (keep my place)</button>
+
+    <div id="userInfo" style="display:none;">
+        <p>Name: <span id="userName"></span></p>
+        <p>Email: <span id="userEmail"></span></p>
+        <button id="logoutButton">Logout</button>
+    </div>
 
     <script>
         // GET /profile (server.js) redirects here with ?sessionEnded=1 when
@@ -22,6 +28,31 @@
             // showing the message.
             history.replaceState(null, '', '/');
         }
+
+        document.getElementById('grafwordLoginPopup').addEventListener('click', () => {
+            // Must be called synchronously inside the click handler, or browsers
+            // will block it as an unrequested popup.
+            window.open('/auth/grafword/login', 'GrafwordSSO', 'width=700,height=900');
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            window.location.href = '/logout';
+        });
+
+        window.addEventListener('message', async (event) => {
+            // Only trust messages from this same app - not just any window that
+            // happens to have opened one.
+            if (event.origin !== window.location.origin) return;
+            if (event.data && event.data.grafwordLoginComplete) {
+                const response = await fetch('/api/profile');
+                const user = await response.json();
+
+                document.getElementById('grafwordLoginPopup').style.display = 'none';
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userInfo').style.display = 'block';
+            }
+        });
     </script>
 </body>
 

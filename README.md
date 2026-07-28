@@ -104,33 +104,51 @@ may be utilized in a pop-up (though user experience may be affected by
 pop-up blockers).
 
 ```html
-<button id="grafwordLoginPopup">Login with Grafword (keep my place)</button>
+<p id="sessionEndedMessage" style="display:none;">You've been signed out. Please sign in again.</p>
+<button id="grafwordLoginPopup">Login with Grafword</button>
+
+<div id="userInfo" style="display:none;">
+    <p>Name: <span id="userName"></span></p>
+    <p>Email: <span id="userEmail"></span></p>
+    <button id="logoutButton">Logout</button>
+</div>
 
 <script>
+    // GET /profile (server.js) redirects here with ?sessionEnded=1 when
+    // it finds no session - either it expired naturally, or a
+    // back-channel logout ended it.
+    if (new URLSearchParams(window.location.search).has('sessionEnded')) {
+        document.getElementById('sessionEndedMessage').style.display = 'block';
+        history.replaceState(null, '', '/');
+    }
     document.getElementById('grafwordLoginPopup').addEventListener('click', () => {
         // Must be called synchronously inside the click handler, or browsers
         // will block it as an unrequested popup.
-        window.open('/auth/grafword/login', 'GrafwordSSO', 'width=500,height=700');
+        window.open('/auth/grafword/login', 'GrafwordSSO', 'width=700,height=900');
     });
 
-    window.addEventListener('message', (event) => {
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        window.location.href = '/logout';
+    });
+
+    window.addEventListener('message', async (event) => {
         // Only trust messages from this same app - not just any window that
         // happens to have opened one.
         if (event.origin !== window.location.origin) return;
         if (event.data && event.data.grafwordLoginComplete) {
-            // App-specific: update whatever UI needs to reflect "now signed in" 
-            // Comment out the code below to view and place user data wherever
-            // you see fit.
-            //const response = await fetch('/api/profile');
-            //const user = await response.json();
-            // Name = user.name
-            // Email = user.email
-            // Nothing here forces a reload, so in-memory state (form data,
-            // editor contents, etc.) is untouched.
+            const response = await fetch('/api/profile');
+            const user = await response.json();
+
+            document.getElementById('grafwordLoginPopup').style.display = 'none';
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userInfo').style.display = 'block';
         }
     });
 </script>
 ```
+
+This repo's own `public/index.html` already includes it.
 
 That `fetch('/api/profile')` call is what makes updating the UI in place
 actually possible - it's the same endpoint `profile.html` uses in Step 2,
@@ -140,34 +158,9 @@ possible responses:
 - **Signed in**: `200` with `{"name": "...", "email": "..."}`.
 - **Not signed in**: `401` with `{"error": "Not signed in."}`.
 
-So `showSignedInAs` in the snippet above would just read `.name`/`.email`
-off that response and write them into the page however your app displays
-them - no reload, no navigation, nothing else needed.
-
-This needs one small change on the server side too - `GET /callback`
-(Step 3) has to know whether it's finishing a popup login or a normal
-full-page one. It doesn't need to be told in advance: instead of always
-doing `res.redirect('/profile')` on success, render a tiny page whose script
-checks `window.opener` and does the right thing either way:
-
-```javascript
-// server.js - /callback, replacing the final res.redirect('/profile')
-res.send(`<!DOCTYPE html><html><body><script>
-    if (window.opener) {
-        // Opened as a popup: tell the main tab we're done and close - no
-        // token, just a plain signal.
-        window.opener.postMessage({ grafwordLoginComplete: true }, window.location.origin);
-        window.close();
-    } else {
-        // Normal full-page flow: just go to /profile as before.
-        window.location.href = '/profile';
-    }
-</script></body></html>`);
-```
-
-The exact same route, code exchange, and session-setting logic serves both
-flows — only this last step branches, client-side, on whether a popup
-opened it.
+The snippet above reads `.name`/`.email` off that response and writes them
+into the page, filling in `#userName`/`#userEmail`,
+and revealing the logout button - no reload, no navigation.
 
 One tradeoff worth knowing: some browsers/extensions block popups more
 aggressively than plain navigation even when opened correctly inside a
@@ -175,7 +168,7 @@ click handler, so it's slightly less reliable across browsers than a
 redirect. On mobile, popups often behave like regular tabs anyway, so the
 "state preserved" benefit is mainly a desktop thing.
 
-## Step 2: Handle the Profile Page for Grafword Authentication
+## Step 2: Handle the Profile Page for Grafword Authentication for non-pop-up
 
 Your server's `GET /profile` route (Step 3) already checks that a session
 exists before serving this page, so `profile.html` just asks the server who's
@@ -331,7 +324,18 @@ app.get('/callback', async (req, res) => {
     req.session.grafwordUser = { sub: claims.sub, name: claims.name, email: claims.email };
     trackUserSession(claims.sub, req.sessionID); // see Step 4 below
 
-    res.redirect('/profile');
+      // Serves both the plain full-page flow and the optional popup flow
+    res.send(`<!DOCTYPE html><html><body><script>
+        if (window.opener) {
+            // Opened as a popup: tell the main tab we're done and close -
+            // no token, just a plain signal.
+            window.opener.postMessage({ grafwordLoginComplete: true }, window.location.origin);
+            window.close();
+        } else {
+            // Normal full-page flow: just go to /profile as before.
+            window.location.href = '/profile';
+        }
+    </script></body></html>`);
 });
 
 app.get('/', (req, res) => {

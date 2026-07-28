@@ -201,7 +201,18 @@ app.get('/callback', async (req, res) => {
     req.session.grafwordUser = { sub: claims.sub, name: claims.name, email: claims.email };
     trackUserSession(claims.sub, req.sessionID); // For back-channel logout support
 
-    res.redirect('/profile');
+    // Serves both the plain full-page flow and the optional popup flow
+    res.send(`<!DOCTYPE html><html><body><script>
+        if (window.opener) {
+            // Opened as a popup: tell the main tab we're done and close -
+            // no token, just a plain signal.
+            window.opener.postMessage({ grafwordLoginComplete: true }, window.location.origin);
+            window.close();
+        } else {
+            // Normal full-page flow: just go to /profile as before.
+            window.location.href = '/profile';
+        }
+    </script></body></html>`);
 });
 
 app.get('/', (req, res) => {
